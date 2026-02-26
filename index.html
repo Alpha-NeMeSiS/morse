@@ -39,35 +39,80 @@
 
   <script>
     const result = document.getElementById('result');
+    const texteInput = document.getElementById('texte');
+    const morseInput = document.getElementById('morse');
 
-    async function callMorseApi(payload) {
+    let encodeMap = null;
+    let decodeMap = null;
+
+    async function loadMorseCollection() {
+      if (encodeMap && decodeMap) {
+        return;
+      }
+
+      const response = await fetch('morse_collection.json');
+      if (!response.ok) {
+        throw new Error(`Impossible de charger la collection Morse (${response.status})`);
+      }
+
+      encodeMap = await response.json();
+      decodeMap = Object.entries(encodeMap).reduce((acc, [char, symbol]) => {
+        if (!(symbol in acc)) {
+          acc[symbol] = char;
+        }
+        return acc;
+      }, {});
+    }
+
+    function encodeText(input) {
+      const chars = Array.from(input);
+      return chars
+        .map((char) => {
+          if (char === ' ') {
+            return '/';
+          }
+
+          const normalized = char.toLocaleUpperCase('fr-FR');
+          return encodeMap[normalized] || '?';
+        })
+        .join(' ');
+    }
+
+    function decodeText(input) {
+      return input
+        .trim()
+        .split(/\s+/)
+        .map((symbol) => {
+          if (symbol === '/' || symbol === '|') {
+            return ' ';
+          }
+
+          return decodeMap[symbol] || '?';
+        })
+        .join('');
+    }
+
+    async function runConversion(type) {
       result.textContent = 'Transmission en cours…';
 
       try {
-        const response = await fetch('morse.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-          },
-          body: new URLSearchParams(payload),
-        });
+        await loadMorseCollection();
 
-        const text = await response.text();
-        result.textContent = text || 'Aucun résultat';
+        if (type === 'encode') {
+          const texte = texteInput.value.trim();
+          result.textContent = texte ? encodeText(texte) : 'Veuillez saisir un texte.';
+          return;
+        }
+
+        const morse = morseInput.value.trim();
+        result.textContent = morse ? decodeText(morse) : 'Veuillez saisir un code morse.';
       } catch (error) {
-        result.textContent = 'Erreur de transmission, réessaie.';
+        result.textContent = `Erreur: ${error.message}`;
       }
     }
 
-    document.getElementById('encodeBtn').addEventListener('click', () => {
-      const texte = document.getElementById('texte').value.trim();
-      callMorseApi({ texte, morse: '' });
-    });
-
-    document.getElementById('decodeBtn').addEventListener('click', () => {
-      const morse = document.getElementById('morse').value.trim();
-      callMorseApi({ morse, texte: '' });
-    });
+    document.getElementById('encodeBtn').addEventListener('click', () => runConversion('encode'));
+    document.getElementById('decodeBtn').addEventListener('click', () => runConversion('decode'));
   </script>
 </body>
 </html>
