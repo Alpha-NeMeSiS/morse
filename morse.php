@@ -1,111 +1,79 @@
 <?php
 
-define('NB', 37);
+declare(strict_types=1);
 
-class TMorse
+function chargerCollectionDepuisJson(string $fichierJson): array
 {
-    public string $texte;
-    public string $symbole;
-}
+    if (!is_file($fichierJson)) {
+        throw new RuntimeException("Fichier JSON introuvable: {$fichierJson}");
+    }
 
-function creerCollection(): array
-{
-    $entries = [
-        ['A', '.-'],
-        ['B', '-...'],
-        ['C', '-.-.'],
-        ['D', '-..'],
-        ['E', '.'],
-        ['F', '..-.'],
-        ['G', '--.'],
-        ['H', '....'],
-        ['I', '..'],
-        ['J', '.---'],
-        ['K', '-.-'],
-        ['L', '.-..'],
-        ['M', '--'],
-        ['N', '-.'],
-        ['O', '---'],
-        ['P', '.--.'],
-        ['Q', '--.-'],
-        ['R', '.-.'],
-        ['S', '...'],
-        ['T', '-'],
-        ['U', '..-'],
-        ['V', '...-'],
-        ['W', '.--'],
-        ['X', '-..-'],
-        ['Y', '-.--'],
-        ['Z', '--..'],
-        ['1', '.----'],
-        ['2', '..---'],
-        ['3', '...--'],
-        ['4', '....-'],
-        ['5', '.....'],
-        ['6', '-....'],
-        ['7', '--...'],
-        ['8', '---..'],
-        ['9', '----.'],
-        ['0', '-----'],
-        ['.', '.-.-.-'],
-    ];
+    $contenu = file_get_contents($fichierJson);
+    if ($contenu === false) {
+        throw new RuntimeException('Impossible de lire le fichier JSON Morse.');
+    }
 
-    $collection = [];
-    foreach ($entries as [$texte, $symbole]) {
-        $item = new TMorse();
-        $item->texte = $texte;
-        $item->symbole = $symbole;
-        $collection[] = $item;
+    $collection = json_decode($contenu, true);
+    if (!is_array($collection)) {
+        throw new RuntimeException('Le contenu JSON Morse est invalide.');
     }
 
     return $collection;
 }
 
-function coderCaractere(array $collection, string $caractere): string
+function creerMapDecodage(array $collection): array
 {
-    foreach ($collection as $item) {
-        if (strtoupper($caractere) === strtoupper($item->texte)) {
-            return $item->symbole;
+    $map = [];
+    foreach ($collection as $caractere => $symbole) {
+        if (!is_string($caractere) || !is_string($symbole) || $symbole === '') {
+            continue;
+        }
+        if (!array_key_exists($symbole, $map)) {
+            $map[$symbole] = $caractere;
         }
     }
 
-    return '?';
+    return $map;
 }
 
-function decoderSymbole(array $collection, string $symbole): string
+function separerCaracteresUnicode(string $texte): array
 {
-    foreach ($collection as $item) {
-        if (strtoupper($symbole) === strtoupper($item->symbole)) {
-            return $item->texte;
-        }
-    }
-
-    return '?';
+    $chars = preg_split('//u', $texte, -1, PREG_SPLIT_NO_EMPTY);
+    return $chars === false ? [] : $chars;
 }
 
-function coderTexte(string $texte): string
+function coderTexte(string $texte, array $collection): string
 {
-    $collection = creerCollection();
     $resultats = [];
 
-    for ($i = 0; $i < strlen($texte); $i++) {
-        $resultats[] = coderCaractere($collection, $texte[$i]);
+    foreach (separerCaracteresUnicode($texte) as $caractere) {
+        if ($caractere === ' ') {
+            $resultats[] = '/';
+            continue;
+        }
+
+        $cle = mb_strtoupper($caractere, 'UTF-8');
+        $resultats[] = $collection[$cle] ?? '?';
     }
 
     return implode(' ', $resultats);
 }
 
-function decoderMorse(string $morse): string
+function decoderMorse(string $morse, array $mapDecodage): string
 {
-    $collection = creerCollection();
     $symboles = preg_split('/\s+/', trim($morse));
-    $resultat = '';
+    if ($symboles === false) {
+        return '';
+    }
 
+    $resultat = '';
     foreach ($symboles as $symbole) {
-        if ($symbole === '') {
+        if ($symbole === '/' || $symbole === '|') {
+            $resultat .= ' ';
             continue;
         }
-        $resultat .= decoderSymbole($collection, $symbole);
+
+        $resultat .= $mapDecodage[$symbole] ?? '?';
     }
 
     return $resultat;
@@ -113,22 +81,31 @@ function decoderMorse(string $morse): string
 
 header('Content-Type: text/plain; charset=utf-8');
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+try {
+    $collection = chargerCollectionDepuisJson(__DIR__ . '/morse_collection.json');
+    $mapDecodage = creerMapDecodage($collection);
+} catch (RuntimeException $exception) {
+    http_response_code(500);
+    echo $exception->getMessage();
+    exit;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     echo "Utilisez une requête POST avec 'texte' ou 'morse'.";
     exit;
 }
 
-$texte = trim($_POST['texte'] ?? '');
-$morse = trim($_POST['morse'] ?? '');
+$texte = trim((string)($_POST['texte'] ?? ''));
+$morse = trim((string)($_POST['morse'] ?? ''));
 
 if ($texte !== '') {
-    echo coderTexte($texte);
+    echo coderTexte($texte, $collection);
     exit;
 }
 
 if ($morse !== '') {
-    echo decoderMorse($morse);
+    echo decoderMorse($morse, $mapDecodage);
     exit;
 }
 
-echo "Veuillez saisir un texte ou un code morse.";
+echo 'Veuillez saisir un texte ou un code morse.';
