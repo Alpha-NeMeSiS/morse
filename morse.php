@@ -1,247 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width; initial-scale=1.0">
-    <title>code morse</title>
-    <a href="https://alpha-nemesis.github.io/morse/"></a>
-</head>
+declare(strict_types=1);
 
-<body>
-    <form method="POST">
-        <fieldset>
-            <legend></legend>
-            <label>phrase to morse</label>
-            <textarea type="text" name="texte"></textarea> 
-            <label>morse to phrase</label>
-            <textarea type="text" name="morse"></textarea>
-            <br /><br />
-            <h1>slt code<h1/>
-            <p>slt code</p>
-            <input type="submit" value="codage">
-            <input type="submit" value="décodage">
-        </fieldset>
-    </form>
-    <br />
-                <?php
-define('NB', 37);
-class tmorse
+function chargerCollectionDepuisJson(string $fichierJson): array
 {
-    public $texte;
-    public $symbole;
+    if (!is_file($fichierJson)) {
+        throw new RuntimeException("Fichier JSON introuvable: {$fichierJson}");
+    }
+
+    $contenu = file_get_contents($fichierJson);
+    if ($contenu === false) {
+        throw new RuntimeException('Impossible de lire le fichier JSON Morse.');
+    }
+
+    $collection = json_decode($contenu, true);
+    if (!is_array($collection)) {
+        throw new RuntimeException('Le contenu JSON Morse est invalide.');
+    }
+
+    return $collection;
 }
-function creercollection()
+
+function creerMapDecodage(array $collection): array
 {
-    $i = 0;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'A';
-    $caractère[$i]->symbole = '.-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'B';
-    $caractère[$i]->symbole = '-...';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'C';
-    $caractère[$i]->symbole = '-.-.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'D';
-    $caractère[$i]->symbole = '-..';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'E';
-    $caractère[$i]->symbole = '.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'F';
-    $caractère[$i]->symbole = '..-.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'G';
-    $caractère[$i]->symbole = '--.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'H';
-    $caractère[$i]->symbole = '....';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'I';
-    $caractère[$i]->symbole = '..';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'J';
-    $caractère[$i]->symbole = '.---';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'K';
-    $caractère[$i]->symbole = '-.-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'L';
-    $caractère[$i]->symbole = '.-..';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'M';
-    $caractère[$i]->symbole = '--';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'N';
-    $caractère[$i]->symbole = '-.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'O';
-    $caractère[$i]->symbole = '---';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'P';
-    $caractère[$i]->symbole = '.--.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'Q';
-    $caractère[$i]->symbole = '--.-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'R';
-    $caractère[$i]->symbole = '.-.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'S';
-    $caractère[$i]->symbole = '...';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'T';
-    $caractère[$i]->symbole = '-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'U';
-    $caractère[$i]->symbole = '..-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'V';
-    $caractère[$i]->symbole = '...-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'W';
-    $caractère[$i]->symbole = '.--';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'X';
-    $caractère[$i]->symbole = '-..-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'Y';
-    $caractère[$i]->symbole = '-.--';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = 'Z';
-    $caractère[$i]->symbole = '--..';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '1';
-    $caractère[$i]->symbole = '.----';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '2';
-    $caractère[$i]->symbole = '..---';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '3';
-    $caractère[$i]->symbole = '...--';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '4';
-    $caractère[$i]->symbole = '....-';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '5';
-    $caractère[$i]->symbole = '.....';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '6';
-    $caractère[$i]->symbole = '-....';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '7';
-    $caractère[$i]->symbole = '--...';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '8';
-    $caractère[$i]->symbole = '---..';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '9';
-    $caractère[$i]->symbole = '----.';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '0';
-    $caractère[$i]->symbole = '-----';
-    $i++;
-    $caractère[$i] = new tmorse;
-    $caractère[$i]->texte = '.';
-    $caractère[$i]->symbole = '.-.-.-';
-    $i++;
-    return $caractère;
-}
-function codage($caractère, $cart)
-{
-    $trouve = false;
-    $i = 0;
-    $itrouver = 0;
-    while ($i < NB && $trouve == false) {
-        if (strtoupper($cart) == strtoupper($caractère[$i]->texte)) {
-            $trouve = true;
-            $itrouver =  $i;
-        } else {
-            $i++;
+    $map = [];
+    foreach ($collection as $caractere => $symbole) {
+        if (!is_string($caractere) || !is_string($symbole) || $symbole === '') {
+            continue;
+        }
+        if (!array_key_exists($symbole, $map)) {
+            $map[$symbole] = $caractere;
         }
     }
 
-
-    $wsymbole = ($trouve == true) ? $caractère[$itrouver]->symbole : '?';
-    return $wsymbole;
+    return $map;
 }
 
-
-function décodage($caractère, $cart)
+function separerCaracteresUnicode(string $texte): array
 {
-    $trouve = false;
-    $i = 0;
-    $itrouver = 0;
-    while ($i < NB && $trouve == false) {
-        if (strtoupper($cart) == strtoupper($caractère[$i]->symbole)) {
-            $trouve = true;
-            $itrouver =  $i;
-        } else {
-            $i++;
+    $chars = preg_split('//u', $texte, -1, PREG_SPLIT_NO_EMPTY);
+    return $chars === false ? [] : $chars;
+}
+
+function coderTexte(string $texte, array $collection): string
+{
+    $resultats = [];
+
+    foreach (separerCaracteresUnicode($texte) as $caractere) {
+        if ($caractere === ' ') {
+            $resultats[] = '/';
+            continue;
         }
+
+        $cle = mb_strtoupper($caractere, 'UTF-8');
+        $resultats[] = $collection[$cle] ?? '?';
     }
-    $wtexte = ($trouve == true) ? $caractère[$itrouver]->texte : '?';
-    return $wtexte;
+
+    return implode(' ', $resultats);
 }
 
+function decoderMorse(string $morse, array $mapDecodage): string
+{
+    $symboles = preg_split('/\s+/', trim($morse));
+    if ($symboles === false) {
+        return '';
+    }
 
-if (isset($_POST['texte']) && !empty($_POST['texte'])) {
-    $caractère = creercollection();
-    $texte = $_POST['texte'];
-    $wsymbole = '';
-    for ($i = 0; $i < strlen($texte); $i++) {
-        $wsymbole = $wsymbole . ' ' . codage($caractère, $texte[$i]);
+    $resultat = '';
+    foreach ($symboles as $symbole) {
+        if ($symbole === '/' || $symbole === '|') {
+            $resultat .= ' ';
+            continue;
+        }
+
+        $resultat .= $mapDecodage[$symbole] ?? '?';
     }
-    echo $wsymbole;
-} else if (isset($_POST['morse']) && !empty($_POST['morse'])) {
-    $caractère = creercollection();
-    $morse = $_POST['morse'];
-    $tabmorse = explode(' ', $morse);
-    $wsymbole = '';
-    for ($i = 0; $i < count($tabmorse); $i++) {
-        $wsymbole = $wsymbole . décodage($caractère, $tabmorse[$i]);
-    }
-    echo $wsymbole;
+
+    return $resultat;
 }
-?>
-</body>
 
-</html>
+header('Content-Type: text/plain; charset=utf-8');
 
+try {
+    $collection = chargerCollectionDepuisJson(__DIR__ . '/morse_collection.json');
+    $mapDecodage = creerMapDecodage($collection);
+} catch (RuntimeException $exception) {
+    http_response_code(500);
+    echo $exception->getMessage();
+    exit;
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    echo "Utilisez une requête POST avec 'texte' ou 'morse'.";
+    exit;
+}
+
+$texte = trim((string)($_POST['texte'] ?? ''));
+$morse = trim((string)($_POST['morse'] ?? ''));
+
+if ($texte !== '') {
+    echo coderTexte($texte, $collection);
+    exit;
+}
+
+if ($morse !== '') {
+    echo decoderMorse($morse, $mapDecodage);
+    exit;
+}
+
+echo 'Veuillez saisir un texte ou un code morse.';
