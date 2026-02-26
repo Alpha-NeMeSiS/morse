@@ -78,6 +78,13 @@
         .join(' ');
     }
 
+    function normalizeDecodedCharacter(char) {
+      if (/^[A-ZÀ-ÖØ-Þ]$/u.test(char)) {
+        return char.toLocaleLowerCase('fr-FR');
+      }
+      return char;
+    }
+
     function decodeText(input) {
       return input
         .trim()
@@ -87,7 +94,8 @@
             return ' ';
           }
 
-          return decodeMap[symbol] || '?';
+          const decoded = decodeMap[symbol] || '?';
+          return normalizeDecodedCharacter(decoded);
         })
         .join('');
     }
