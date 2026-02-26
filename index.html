@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Traducteur Morse</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="app__header">
+      <p class="eyebrow">Signal Station</p>
+      <h1>Traducteur Morse</h1>
+      <p>Encode du texte en Morse ou décode des signaux en message lisible.</p>
+    </header>
+
+    <section class="card">
+      <div class="field-group">
+        <label for="texte">Texte à encoder</label>
+        <textarea id="texte" name="texte" placeholder="Ex: BONJOUR"></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="encodeBtn">Encoder ➜ Morse</button>
+      </div>
+
+      <div class="field-group">
+        <label for="morse">Morse à décoder</label>
+        <textarea id="morse" name="morse" placeholder="Ex: -... --- -. .--- --- ..- .-."></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="decodeBtn">Décoder ➜ Texte</button>
+      </div>
+
+      <div class="result" id="result" aria-live="polite">Résultat en attente…</div>
+    </section>
+  </main>
+
+  <script>
+    const result = document.getElementById('result');
+
+    async function callMorseApi(payload) {
+      result.textContent = 'Transmission en cours…';
+
+      try {
+        const response = await fetch('morse.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          },
+          body: new URLSearchParams(payload),
+        });
+
+        const text = await response.text();
+        result.textContent = text || 'Aucun résultat';
+      } catch (error) {
+        result.textContent = 'Erreur de transmission, réessaie.';
+      }
+    }
+
+    document.getElementById('encodeBtn').addEventListener('click', () => {
+      const texte = document.getElementById('texte').value.trim();
+      callMorseApi({ texte, morse: '' });
+    });
+
+    document.getElementById('decodeBtn').addEventListener('click', () => {
+      const morse = document.getElementById('morse').value.trim();
+      callMorseApi({ morse, texte: '' });
+    });
+  </script>
+</body>
+</html>
